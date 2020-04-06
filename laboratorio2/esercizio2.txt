@@ -1,0 +1,7 @@
+gogol
+asimov
+murakami
+borges
+poe
+lem
+lang
