@@ -131,13 +131,17 @@ Btree unionBtree(Btree tree1, Btree tree2){
 
 Btree intersectBtree(Btree tree1, Btree tree2){
   Btree ret = makeBtree();
-  intersectBtree_rc(tree1, tree2, &ret);
+  if(tree1) intersectBtree_rc(tree1, tree2, &ret);
   return ret;
 }
 
 Btree differenceBtree(Btree tree1, Btree tree2){
   Btree ret = makeBtree();
-  differenceBtree_rc(tree1, tree2, &ret);
+  if(tree1) {
+	  ret = copyBtree(tree1);
+	  removeDuplicatesBtree(&ret);
+	  differenceBtree_rc(tree1, tree2, &ret);
+  }
   return ret;
 }
 
@@ -176,11 +180,10 @@ void intersectBtree_rc(Btree tree1, Btree tree2, Btree* tree3){
 
 void differenceBtree_rc(Btree tree1, Btree tree2, Btree* tree3){
   if(tree2){
-    if(!searchBtree(tree2, tree1->value))
-      if(!searchBtree(*tree3, tree1->value))
-        *tree3 = insertBtree(*tree3, tree1->value);
-    intersectBtree_rc(tree1->left, tree2, tree3);
-    intersectBtree_rc(tree1->right, tree2, tree3);
+    if(searchBtree(*tree3, tree2->value))
+      *tree3 = removeBnode(*tree3, tree2->value);
+    differenceBtree_rc(tree1, tree2->left, tree3);
+    differenceBtree_rc(tree1, tree2->right, tree3);
   }
   return;
 }
