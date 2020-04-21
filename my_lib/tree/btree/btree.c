@@ -250,7 +250,7 @@ void predecessorBtree_rec(Btree root, int value, BnodePtr* candidate){
       *candidate = root;
       predecessorBtree_rec(root->right, value, candidate);
     }else{
-      BnodePtr tmp = minBtree(root->left);
+      BnodePtr tmp = maxBtree(root->left);
       *candidate = (tmp) ? tmp : (*candidate);
     }
   }
