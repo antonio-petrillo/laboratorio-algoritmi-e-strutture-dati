@@ -153,11 +153,188 @@ avlTree dropAvl(avlTree tree){
 	return NULL;
 }
 
-void print(avlTree tree){
-	if(tree){
-		print(tree->left);
-		printf("%s%d\n", "valore del nodo: ", tree->value);
-		print(tree->right);
-	}
-	return ;
+int countAvlTree(avlTree root){
+    if(root) return countAvlTree(root->left) + countAvlTree(root->right) + 1;
+    return 0;
+}
+
+avlNodePtr minAvlTree(avlTree root){
+    if(!root) return NULL;
+    return (root->left) ? minAvlTree(root->left) : root;
+}
+
+avlNodePtr maxAvlTree(avlTree root){
+  if(!root) return NULL;
+  return (root->right) ? maxAvlTree(root->right) : root;
+}
+
+int isEmptyAvlTree(avlTree root){
+  return root == NULL;
+}
+
+avlNodePtr searchAvlTree(avlTree root, int value){
+    if(!root) return NULL;
+    else{
+      if(root->value > value) return searchAvlTree(root->left, value);
+      else if(root->value < value) return searchAvlTree(root->right, value);
+      else return root;
+    }
+}
+
+void inOrderAvlTree(avlTree root){
+    if(!root) return;
+    inOrderAvlTree(root->left);
+    printf("valore del nodo: %d\n", root->value);
+    inOrderAvlTree(root->right);
+    return;
+}
+
+void preOrderAvlTree(avlTree root){
+  if(!root) return;
+  printf("valore del nodo: %d\n", root->value);
+  preOrderAvlTree(root->left);
+  preOrderAvlTree(root->right);
+  return;
+}
+
+void postOrderAvlTree(avlTree root){
+  if(!root) return;
+  postOrderAvlTree(root->left);
+  postOrderAvlTree(root->right);
+  printf("valore del nodo: %d\n", root->value);
+  return;
+}
+
+avlTree unionAvlTree(avlTree tree1, avlTree tree2){
+  avlTree ret = makeAvlTree();
+  unionAvlTree_rc(tree1, tree2, &ret);
+  return ret;
+}
+
+avlTree intersectAvlTree(avlTree tree1, avlTree tree2){
+  avlTree ret = makeAvlTree();
+  if(tree1) intersectAvlTree_rc(tree1, tree2, &ret);
+  return ret;
+}
+
+avlTree differenceAvlTree(avlTree tree1, avlTree tree2){
+  avlTree ret = makeAvlTree();
+  if(tree1) {
+	ret = copyAvlTree(tree1);
+	removeDuplicatesAvlTree(&ret);
+	differenceAvlTree_rc(tree2, &ret);
+  }
+  return ret;
+}
+
+void unionAvlTree_rc(avlTree tree1, avlTree tree2, avlTree* tree3){
+    if(!tree1 && !tree2){
+      //do nothing
+    }else if(tree1 && !tree2){
+      if(!searchAvlTree(*tree3, tree1->value)) *tree3 = insertAvl(*tree3, tree1->value);
+      unionAvlTree_rc(tree1->left, tree2, tree3);
+      unionAvlTree_rc(tree1->right, tree2, tree3);
+    }else if(!tree1 && tree2){
+      if(!searchAvlTree(*tree3, tree2->value)) *tree3 = insertAvl(*tree3, tree2->value);
+      unionAvlTree_rc(tree1, tree2->left, tree3);
+      unionAvlTree_rc(tree1, tree2->right, tree3);
+    }else{
+      if(!searchAvlTree(*tree3, tree1->value)) *tree3 = insertAvl(*tree3, tree1->value);
+      if(!searchAvlTree(*tree3, tree2->value)) *tree3 = insertAvl(*tree3, tree2->value);
+      unionAvlTree_rc(tree1->left, tree2, tree3);
+      unionAvlTree_rc(tree1->right, tree2, tree3);
+      unionAvlTree_rc(tree1, tree2->left, tree3);
+      unionAvlTree_rc(tree1, tree2->right, tree3);
+    }
+    return;
+}
+
+void intersectAvlTree_rc(avlTree tree1, avlTree tree2, avlTree* tree3){
+    if(tree2){
+      if(searchAvlTree(tree1, tree2->value))
+        if(!searchAvlTree(*tree3, tree2->value))
+          *tree3 = insertAvl(*tree3, tree2->value);
+      intersectAvlTree_rc(tree1, tree2->left, tree3);
+      intersectAvlTree_rc(tree1, tree2->right, tree3);
+    }
+    return;
+}
+
+void differenceAvlTree_rc(avlTree tree2, avlTree* tree3){
+  if(tree2){
+    if(searchAvlTree(*tree3, tree2->value))
+      *tree3 = deleteAvlNode(*tree3, tree2->value);
+    differenceAvlTree_rc(tree2->left, tree3);
+    differenceAvlTree_rc(tree2->right, tree3);
+  }
+  return;
+}
+
+avlTree copyAvlTree(avlTree tree){
+  avlTree copy = makeAvlTree();
+  copyAvlTree_rec(tree, &copy);
+  return copy;
+}
+
+void copyAvlTree_rec(avlTree tree, avlTree* copy){
+  if(!tree) return;
+  *copy = insertAvl(*copy, tree->value);
+  copyAvlTree_rec(tree->left, copy);
+  copyAvlTree_rec(tree->right, copy);
+  return;
+}
+
+void removeDuplicatesAvlTree(avlTree* tree){
+  if(!(*tree)) return;
+  if(searchAvlTree((*tree)->left, (*tree)->value)){
+    (*tree)->left = deleteAvlNode((*tree)->left, (*tree)->value);
+  }if(searchAvlTree((*tree)->right, (*tree)->value)){
+    (*tree)->right = deleteAvlNode((*tree)->right, (*tree)->value);
+  }
+  removeDuplicatesAvlTree(&(*tree)->left);
+  removeDuplicatesAvlTree(&(*tree)->right);
+  return;
+}
+
+avlNodePtr successorAvlTree(avlTree tree, int value){
+    avlNodePtr ret = NULL;
+    successorAvlTree_rec(tree, value, &ret);
+    return ret;
+}
+
+// ogni volta che scendo a sinistra devo salvare il nodo
+void successorAvlTree_rec(avlTree root, int value, avlNodePtr* candidate){
+  if(root){
+    if(root->value > value){
+      *candidate = root;
+      successorAvlTree_rec(root->left, value, candidate);
+    }else if(root->value < value){
+      successorAvlTree_rec(root->right, value, candidate);
+    }else{
+      avlNodePtr tmp = minAvlTree(root->right);
+      *candidate = (tmp) ? tmp : (*candidate);
+    }
+  }
+  return;
+}
+
+avlNodePtr predeccessorAvlTree(avlTree tree, int value){
+  avlNodePtr ret = NULL;
+  predecessorAvlTree_rec(tree, value, &ret);
+  return ret;
+}
+
+void predecessorAvlTree_rec(avlTree root, int value, avlNodePtr* candidate){
+  if(root){
+    if(root->value > value){
+      predecessorAvlTree_rec(root->left, value, candidate);
+    }else if(root->value < value){
+      *candidate = root;
+      predecessorAvlTree_rec(root->right, value, candidate);
+    }else{
+      avlNodePtr tmp = maxAvlTree(root->left);
+      *candidate = (tmp) ? tmp : (*candidate);
+    }
+  }
+  return;
 }

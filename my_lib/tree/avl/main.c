@@ -22,6 +22,10 @@ int max2(L l);
 int max(avlTree tree);
 
 int main(int argc, char** argv){
+	if(argc < 2){
+		fprintf(stderr, "too few argument, the first argument will be the number of element to insert into the tree\n");
+		exit(1);
+	}
 	avlTree tree = makeAvlTree();
 	Q q;
 	q.head = q.tail = NULL;
@@ -33,7 +37,7 @@ int main(int argc, char** argv){
 	}
 	tree = insertAvl(tree, 42);
 	printf("%s\n", "\nfine inserimento");
-	print(tree);
+	//print(tree);
 	printf("%s\n", "ricerca del massimo nell'avl");
 	clock_t s_avl = clock();
 	int massimo = max(tree);
@@ -55,7 +59,7 @@ int main(int argc, char** argv){
 	tree = deleteAvlNode(tree, 31);
 	tree = deleteAvlNode(tree, 19);
 	tree = deleteAvlNode(tree, 20);
-	print(tree);
+	//print(tree);
 	tree = dropAvl(tree);
 	return 0;
 }
