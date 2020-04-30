@@ -30,6 +30,7 @@ rbtree drop_rbtree(rbtree tree);
 rb_node drop_rbtree_helper(rb_node node);
 rb_node make_rbnode(int value, color_t color, rb_node left, rb_node right);
 rb_node search_rb_node(rbtree tree, int value);
+rb_node search_rb_node_from_node(rb_node node, int value);
 
 void in_order_rbvisit(rbtree tree);
 void in_order_rbvisit_helper(rb_node node);
@@ -52,11 +53,30 @@ rb_node max_rb_from_node(rb_node node);
 
 
 void rbtree_remove(rbtree tree, int key);
+void rbtree_remove_with_addr(rbtree tree, rb_node key);
 void delete_case1(rbtree tree, rb_node node);
 void delete_case2(rbtree tree, rb_node node);
 void delete_case3(rbtree tree, rb_node node);
 void delete_case4(rbtree tree, rb_node node);
 void delete_case5(rbtree tree, rb_node node);
 void delete_case6(rbtree tree, rb_node node);
+
+int count_rb_node(rbtree tree);
+int count_rb_node_helper(rb_node node);
+int is_empty_rb(rbtree tree);
+rbtree union_rbtree(rbtree tree1, rbtree tree2);
+void union_rbtree_helper(rb_node tree1, rb_node tree2, rbtree tree3);
+rbtree intersect_rbtree(rbtree tree1, rbtree tree2);
+void intersect_rbtree_helper(rb_node tree1, rb_node tree2, rbtree tree3);
+rbtree difference_rbtree(rbtree tree1, rbtree tree2);
+void difference_rbtree_helper(rb_node tree2, rbtree tree3);
+rbtree copy_rbtree(rbtree src);
+void copy_rbtree_helper(rbtree dest, rb_node node);
+void remove_rb_duplicates(rbtree tree);
+void remove_rb_duplicates_helper(rbtree tree, rb_node node);
+rb_node rb_successor(rbtree tree, int key);
+void rb_successor_helper(rb_node node, int key, rb_node* candidate);
+rb_node rb_predecessor(rbtree tree, int key);
+void rb_predecessor_helper(rb_node node, int key, rb_node* candidate);
 
 #endif

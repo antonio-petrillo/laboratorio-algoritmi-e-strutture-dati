@@ -98,6 +98,23 @@ rb_node search_rb_node(rbtree tree, int value){
     return ret_node;
 }
 
+rb_node search_rb_node_from_node(rb_node node, int value){
+    rb_node ret_node = node;
+    while (ret_node != NULL){
+        if(ret_node->value > value){
+            ret_node = ret_node->left;
+        }
+        else if(ret_node->value < value){
+            ret_node = ret_node->right;
+        }
+        else{
+            return ret_node;
+        }
+    }
+    return ret_node;
+    
+}
+
 void rotate_left_rb(rbtree tree, rb_node node){
     rb_node newroot = node->right;
     replace_rb_node(tree, node, newroot);
@@ -220,26 +237,99 @@ void in_order_rbvisit(rbtree tree){
 void in_order_rbvisit_helper(rb_node node){
     if(node){
         in_order_rbvisit_helper(node->left);
-        printf("node's value: %d , node's color: %s , ", node->value, color_to_string(node));
+        printf("node's value: %d , node's color: %s", node->value, color_to_string(node));
         if(node->left){
-            printf("left child: %d , ", node->left->value);
+            printf(", left child: %d", node->left->value);
         }
         if(node->right){
-            printf("right child: %d , ", node->right->value);
+            printf(", right child: %d", node->right->value);
         }
-        puts("");
+        if(node->parent){
+            printf(", node's parent: %d \n", node->parent->value);
+        }
+        else{
+            printf(", this is the root \n");
+        }
         in_order_rbvisit_helper(node->right);
     }
     return;
 }
 
-void post_order_rbvisit(rbtree tree);
-void post_order_rbvisit_helper(rb_node node);
-void pre_order_rbvisit(rbtree tree);
-void pre_order_rbvisit_helper(rb_node node);
+void post_order_rbvisit(rbtree tree){
+    post_order_rbvisit_helper(tree->root);
+    return;
+}
+
+void post_order_rbvisit_helper(rb_node node){
+    if(node){
+        post_order_rbvisit_helper(node->left);
+        post_order_rbvisit_helper(node->right);
+        if(node->left){
+            printf(", left child: %d", node->left->value);
+        }
+        if(node->right){
+            printf(", right child: %d", node->right->value);
+        }
+        if(node->parent){
+            printf(", node's parent: %d \n", node->parent->value);
+        }
+        else{
+            printf(", this is the root \n");
+        }
+    }
+    return;
+}
+
+void pre_order_rbvisit(rbtree tree){
+    pre_order_rbvisit_helper(tree->root);
+    return;
+}
+
+void pre_order_rbvisit_helper(rb_node node){
+    if(node){
+        if(node->left){
+            printf(", left child: %d", node->left->value);
+        }
+        if(node->right){
+            printf(", right child: %d", node->right->value);
+        }
+        if(node->parent){
+            printf(", node's parent: %d \n", node->parent->value);
+        }
+        else{
+            printf(", this is the root \n");
+        }
+        pre_order_rbvisit_helper(node->left);
+        pre_order_rbvisit_helper(node->right);
+    }
+    return;
+}
+
 
 void rbtree_remove(rbtree tree, int key){
     rb_node del_node = search_rb_node(tree, key);
+    rb_node child = NULL;
+    if(del_node == NULL) return; // key not present into the tree
+    if(num_child(del_node) == 2){
+        rb_node predecessor = min_rb_from_node(del_node);
+        del_node->value = predecessor->value;
+        del_node = predecessor;
+    }
+    assert(del_node->left == NULL || del_node->right == NULL);
+    child = (del_node->right == NULL) ? del_node->left : del_node->right;
+    if(is_black(del_node)){
+        del_node->color = node_color(child);
+        delete_case1(tree, del_node);
+    }
+    replace_rb_node(tree, del_node, child);
+    if(del_node->parent == NULL && child != NULL)
+        child->color = BLACK;
+    free(del_node);
+    return;
+}
+
+void rbtree_remove_with_addr(rbtree tree, rb_node key){
+    rb_node del_node = key;
     rb_node child = NULL;
     if(del_node == NULL) return; // key not present into the tree
     if(num_child(del_node) == 2){
@@ -354,6 +444,159 @@ void delete_case6(rbtree tree, rb_node node){
         assert(is_red(sibling(node)->left));
         sibling(node)->left->color = BLACK;
         rotate_right_rb(tree, node->parent);
+    }
+    return;
+}
+
+int count_rb_node(rbtree tree){
+    return count_rb_node_helper(tree->root);
+}
+
+int count_rb_node_helper(rb_node node){
+    if(!node) return 0;
+    return count_rb_node_helper(node->left) + count_rb_node_helper(node->right) + 1;
+}
+
+int is_empty_rb(rbtree tree){
+    return tree->root == NULL;
+}
+
+rbtree union_rbtree(rbtree tree1, rbtree tree2){
+    rbtree ret_tree = make_rbtree();
+    union_rbtree_helper(tree1->root, tree2->root, ret_tree);
+    return ret_tree;
+}
+
+void union_rbtree_helper(rb_node tree1, rb_node tree2, rbtree tree3){
+    if(!tree1 && !tree2){
+      //do nothing
+    }else if(tree1 && !tree2){
+      if(!search_rb_node(tree3, tree1->value)) rbtree_insert(tree3, tree1->value);
+      union_rbtree_helper(tree1->left, tree2, tree3);
+      union_rbtree_helper(tree1->right, tree2, tree3);
+    }else if(!tree1 && tree2){
+      if(!search_rb_node(tree3, tree2->value)) rbtree_insert(tree3, tree2->value);
+      union_rbtree_helper(tree1, tree2->left, tree3);
+      union_rbtree_helper(tree1, tree2->right, tree3);
+    }else{
+      if(!search_rb_node(tree3, tree1->value)) rbtree_insert(tree3, tree1->value);
+      if(!search_rb_node(tree3, tree2->value)) rbtree_insert(tree3, tree2->value);
+      union_rbtree_helper(tree1->left, tree2, tree3);
+      union_rbtree_helper(tree1->right, tree2, tree3);
+      union_rbtree_helper(tree1, tree2->left, tree3);
+      union_rbtree_helper(tree1, tree2->right, tree3);
+    }
+    return;
+}
+
+rbtree intersect_rbtree(rbtree tree1, rbtree tree2){
+    rbtree ret_tree = make_rbtree();
+    if(!is_empty_rb(tree1))intersect_rbtree_helper(tree1->root, tree2->root, ret_tree);
+    return ret_tree;
+}
+
+void intersect_rbtree_helper(rb_node tree1, rb_node tree2, rbtree tree3){
+    if(tree2){
+      if(search_rb_node_from_node(tree1, tree2->value))
+        if(!search_rb_node(tree3, tree2->value))
+          rbtree_insert(tree3, tree2->value);
+      intersect_rbtree_helper(tree1, tree2->left, tree3);
+      intersect_rbtree_helper(tree1, tree2->right, tree3);
+    }
+    return;
+}
+
+rbtree difference_rbtree(rbtree tree1, rbtree tree2){
+    rbtree ret_tree = make_rbtree();
+    ret_tree = copy_rbtree(tree1);
+    if(!is_empty_rb(tree2)) difference_rbtree_helper(tree2->root, ret_tree);
+    return ret_tree;
+}
+
+void difference_rbtree_helper(rb_node tree2, rbtree tree3){
+    if(tree2){
+        if(search_rb_node(tree3, tree2->value)){
+            rbtree_remove(tree3, tree2->value);
+        }
+        difference_rbtree_helper(tree2->left, tree3);
+        difference_rbtree_helper(tree2->right, tree3);
+    }
+    return;
+}
+
+rbtree copy_rbtree(rbtree src){
+    rbtree copy = make_rbtree();
+    copy_rbtree_helper(copy, src->root);
+    return copy;
+}
+
+void copy_rbtree_helper(rbtree dest, rb_node node){
+    if(node){
+        rbtree_insert(dest, node->value);
+        copy_rbtree_helper(dest, node->left);
+        copy_rbtree_helper(dest, node->right);
+    }
+    return;
+}
+
+void remove_rb_duplicates(rbtree tree){
+    remove_rb_duplicates_helper(tree, tree->root);
+    return;
+}
+
+void remove_rb_duplicates_helper(rbtree tree, rb_node node){
+    if(node){
+        rb_node tmp = NULL;
+        if(tmp = search_rb_node_from_node(node->left, node->value), tmp){
+            rbtree_remove_with_addr(tree, tmp);
+        }
+        if(tmp = search_rb_node_from_node(node->right, node->value), tmp){
+            rbtree_remove_with_addr(tree, tmp);
+        }
+        remove_rb_duplicates_helper(tree, node->left);
+        remove_rb_duplicates_helper(tree, node->right);
+    }
+    return;
+}
+
+rb_node rb_successor(rbtree tree, int key){
+    rb_node ret_node = NULL;
+    if(!is_empty_rb(tree)) rb_successor_helper(tree->root, key, &ret_node);
+    return ret_node;
+}
+
+void rb_successor_helper(rb_node node, int key, rb_node* candidate){
+    if(node){
+        if(node->value > key){
+            *candidate = node;
+            rb_successor_helper(node->left, key, candidate);
+        }else if(node->value < key){
+            rb_successor_helper(node->right, key, candidate);
+        }else{
+            rb_node tmp = min_rb_from_node(node->right);
+            *candidate = (tmp != NULL) ? tmp : (*candidate);
+        }
+    }
+    return;
+}
+
+rb_node rb_predecessor(rbtree tree, int key){
+    rb_node ret_node = NULL;
+    if(!is_empty_rb(tree)) rb_predecessor_helper(tree->root, key, &ret_node);
+    return ret_node;
+}
+
+void rb_predecessor_helper(rb_node node, int key, rb_node* candidate){
+        if(node){
+        if(node->value > key){
+            rb_predecessor_helper(node->left, key, candidate);
+        }else if(node->value < key){
+            *candidate = node;
+            rb_predecessor_helper(node->right, key, candidate);
+        }else{
+            rb_node tmp = max_rb_from_node(node->left);
+            *candidate = (tmp != NULL) ? tmp : (*candidate);
+        }
     }
     return;
 }

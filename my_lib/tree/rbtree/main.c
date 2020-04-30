@@ -13,6 +13,7 @@ int main(int argc, char** argv){
         //in_order_rbvisit(tree);
         puts("");
     }
+    in_order_rbvisit(tree);
     tree = drop_rbtree(tree);
     return 0;
 }
