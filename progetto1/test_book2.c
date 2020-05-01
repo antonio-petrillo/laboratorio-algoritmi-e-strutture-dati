@@ -4,6 +4,8 @@
 #include "book.h"
 #include "rbtree_library.h"
 
+void printfile(FILE* fp);
+
 int main(int argc, char** argv){
     rbtree library = make_rbtree();
     char** authors1 = (char**) calloc(1, sizeof(char*));
@@ -17,6 +19,29 @@ int main(int argc, char** argv){
     rbtree_insert(library, book1);
     rbtree_insert(library, book2);
     rbtree_insert(library, book1);
+    
+    // FILE* fp = fopen(argv[1], "r");
+    // printfile(fp);
+    in_order_visit_rb(library);
+    puts("test prelievo");
+    book_t tmp = get_book_from_tree(library, book1);
+    in_order_visit_rb(library);
+    tmp = get_book_from_tree(library, book1);
+    in_order_visit_rb(library);
+    tmp = get_book_from_tree(library, book2);
+    in_order_visit_rb(library);
+    tmp = get_book_from_tree(library, book1);
     in_order_visit_rb(library);
     return 0;
+}
+
+void printfile(FILE* fp){
+    char str[120];
+    while (fgets(str, 119, fp) != NULL)
+    {
+        printf("%s", str);
+    } 
+    puts("");
+    fclose(fp);
+    return;
 }

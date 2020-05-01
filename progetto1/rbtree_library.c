@@ -80,6 +80,9 @@ rb_node make_rbnode(book_t new_book, color_t color, rb_node left, rb_node right)
     newnode->parent = NULL;
     newnode->color = color;
     strcpy(newnode->ISBN, new_book->ISBN);
+    newnode->title = (char*) calloc(strlen(new_book->title)+1, sizeof(char));
+    assert(newnode->title != NULL);
+    strcpy(newnode->title, new_book->title);
     newnode->booklist = make_booklist();
     booklist_push(newnode->booklist, new_book);
     if(left != NULL) left->parent = newnode;
@@ -437,6 +440,10 @@ void delete_case6(rbtree tree, rb_node node){
 }
 
 void print_rbnode_booklist(rb_node node){
+    if(node->booklist->head == NULL){
+        //printf("BOOK NOT AVAILABLE: %s\n", node->ISBN);
+        return;
+    }
     int num_copy = booklist_size(node->booklist);
     printf("########### BOOK INFO ##############\n");
         printf("TITLE: %s\n", node->booklist->head->book->title);
@@ -453,21 +460,24 @@ void print_rbnode_booklist(rb_node node){
 
 void in_order_visit_rb(rbtree tree){
     puts("In order visit library\n");
-    in_order_visit_rb_helper(tree->root);
+    if(tree->root) in_order_visit_rb_helper(tree->root);
+    else printf("empty library\n");
     puts("");
     return;
 }
 
 void pre_order_visit_rb(rbtree tree){
     puts("Pre order visit library\n");
-    pre_order_visit_rb_helper(tree->root);
+    if(tree->root) pre_order_visit_rb_helper(tree->root);
+    else printf("empty library\n");
     puts("");
     return;
 }
 
 void post_order_visit_rb(rbtree tree){
     puts("Post order visit library\n");
-    post_order_visit_rb_helper(tree->root);
+    if(tree->root) post_order_visit_rb_helper(tree->root);
+    else printf("empty library\n");
     puts("");
     return;
 }
@@ -499,58 +509,13 @@ void post_order_visit_rb_helper(rb_node node){
     return;
 }
 
-void load_library(rbtree tree, FILE* stream){
-    printf("test");
-    assert(stream != NULL);
-    printf("test");
-    char buffer_ISBN[14];
-    char buffer_title[256];
-    unsigned int buffer_num_authors;
-    char** buffer_authors;
-    char buffer_author[256];
-    double buffer_price;
-    unsigned int buffer_num_copies = 0;
-    while(fscanf(stream, "%s", buffer_ISBN) > 0){
-        printf("test");
-        fscanf(stream, "%[^\n]%*c", buffer_title);
-        fscanf(stream, "%u", &buffer_num_authors);
-        buffer_authors = (char**) calloc(buffer_num_authors, sizeof(char*));
-        assert(buffer_authors != NULL);
-        for(unsigned int i=0; i < buffer_num_authors; i++){
-            fscanf(stream, "%[^\n]%*c", buffer_author);
-            buffer_authors[i] = (char*) calloc(strlen(buffer_author) + 1, sizeof(char));
-            assert(buffer_authors[i] != NULL);
-            strcpy(buffer_authors[i], buffer_author);
-        }
-        fscanf(stream, "%lf", &buffer_price);
-        fscanf(stream, "%u", &buffer_num_copies);
-        for(unsigned int i=0; i<buffer_num_copies; i++){
-            rbtree_insert(tree, make_book(buffer_ISBN, buffer_title, buffer_authors, buffer_num_authors, buffer_price));
-        }
-        for(unsigned int i=0; i < buffer_num_authors; i++){
-            free(buffer_authors[i]);
-        }
-        free(buffer_authors);
+book_t get_book_from_tree(rbtree tree, book_t book){
+    booklist_t booklist = search_booklist_in_rbtree(tree, book);
+    book_t ret_book = NULL;
+    if(booklist->head != NULL) ret_book = booklist_pop(booklist);
+    else{
+        printf("BOOK NOT AVAILABLE: \n");
+        print_book_info(book);
     }
-    return;
-}
-
-void store_library(rbtree tree, FILE* stream){
-    assert(stream != NULL);
-    store_library_helper(tree->root, stream);
-    return;
-}
-
-void store_library_helper(rb_node node, FILE* stream){
-    if(node){
-        unsigned int num_author = node->booklist->head->book->num_authors;
-        fprintf(stream, "%s\n", node->booklist->head->book->ISBN);//isbn
-        fprintf(stream, "%s\n", node->booklist->head->book->title);//title
-        fprintf(stream, "%u\n", num_author);// num_author
-        for(int i=0; i<num_author; i++){
-            fprintf(stream, "%s\n", node->booklist->head->book->authors[i]); //author line by line
-        }
-        fprintf(stream, "%lf", node->booklist->head->book->price);//price
-        fprintf(stream, "%u", booklist_size(node->booklist));//num of copies
-    }
+    return ret_book;
 }

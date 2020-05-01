@@ -14,6 +14,7 @@ typedef struct rb_node_t{
     struct rb_node_t* parent;
     color_t color;
     char ISBN[14];
+    char* title;
     booklist_t booklist;
 } *rb_node;
 
@@ -49,7 +50,6 @@ rb_node max_rb(rbtree tree);
 rb_node min_rb_from_node(rb_node node);
 rb_node max_rb_from_node(rb_node node);
 
-
 void rbtree_remove(rbtree tree, book_t book);
 void rbtree_remove_with_addr(rbtree tree, rb_node key);
 void delete_case1(rbtree tree, rb_node node);
@@ -67,8 +67,9 @@ void in_order_visit_rb_helper(rb_node node);
 void pre_order_visit_rb_helper(rb_node node);
 void post_order_visit_rb_helper(rb_node node);
 
-void load_library(rbtree tree, FILE* stream);
-void store_library(rbtree tree, FILE* stream);
-void store_library_helper(rb_node node, FILE* stream);
+book_t get_book_from_tree(rbtree tree, book_t book);
+
+// todo: search by isbn | search by title | search by author (with some helper function)
+// already implemented search by book 
 
 #endif
