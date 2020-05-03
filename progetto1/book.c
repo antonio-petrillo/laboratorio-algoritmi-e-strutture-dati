@@ -25,6 +25,12 @@ book_t make_book(char ISBN[], char* title, char** authors, unsigned int num_auth
     return new_book;
 }
 
+book_t copy_book(book_t book){
+    assert(book);
+    return make_book(book->ISBN, book->title, book->authors, book->num_authors, book->price);
+    
+}
+
 book_t delete_book(book_t book){
     for(unsigned int i=0; i<book->num_authors; i++){
         free(book->authors[i]);
@@ -76,7 +82,7 @@ void booklist_push(booklist_t booklist, book_t book){
 book_t booklist_pop(booklist_t booklist){
     booknode_t tmp = booklist->head;
     book_t ret_value = (tmp != NULL) ? tmp->book : NULL;
-    if(booklist->head){
+    if(booklist->head != NULL){
         booklist->head = booklist->head->next; 
     }
     free(tmp);

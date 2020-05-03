@@ -13,8 +13,7 @@ typedef struct rb_node_t{
     struct rb_node_t* right;
     struct rb_node_t* parent;
     color_t color;
-    char ISBN[14];
-    char* title;
+    book_t node_info;
     booklist_t booklist;
 } *rb_node;
 
@@ -29,6 +28,7 @@ color_t node_color(rb_node node);
 int is_black(rb_node node);
 int is_red(rb_node node);
 int num_child(rb_node node);
+int is_empty_rb(rbtree tree);
 rbtree make_rbtree();
 rbtree drop_rbtree(rbtree tree);
 rb_node drop_rbtree_helper(rb_node node);
@@ -69,7 +69,7 @@ void post_order_visit_rb_helper(rb_node node);
 
 book_t get_book_from_tree(rbtree tree, book_t book);
 
-// todo: search by isbn | search by title | search by author (with some helper function)
-// already implemented search by book 
+booklist_t get_booklist_by_isbn(rbtree tree, char ISBN[]);
+book_t get_book_by_isbn(rbtree tree, char ISBN[]);
 
 #endif

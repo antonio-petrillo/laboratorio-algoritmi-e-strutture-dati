@@ -46,6 +46,11 @@ int num_child(rb_node node){
     return num;
 }
 
+int is_empty_rb(rbtree tree){
+    assert(tree!=NULL);
+    return tree->root == NULL;
+}
+
 rbtree make_rbtree(){
     rbtree tree = (rbtree) malloc(sizeof(struct rbtree_t));
     assert(tree != NULL);
@@ -79,10 +84,7 @@ rb_node make_rbnode(book_t new_book, color_t color, rb_node left, rb_node right)
     newnode->right = right;
     newnode->parent = NULL;
     newnode->color = color;
-    strcpy(newnode->ISBN, new_book->ISBN);
-    newnode->title = (char*) calloc(strlen(new_book->title)+1, sizeof(char));
-    assert(newnode->title != NULL);
-    strcpy(newnode->title, new_book->title);
+    newnode->node_info = copy_book(new_book);
     newnode->booklist = make_booklist();
     booklist_push(newnode->booklist, new_book);
     if(left != NULL) left->parent = newnode;
@@ -93,7 +95,7 @@ rb_node make_rbnode(book_t new_book, color_t color, rb_node left, rb_node right)
 rb_node search_rb_node(rbtree tree, book_t book){
     rb_node ret_node = tree->root;
     while(ret_node != NULL){
-        int compare_result = compare_ISBN(ret_node->ISBN, book->ISBN);
+        int compare_result = compare_ISBN(ret_node->node_info->ISBN, book->ISBN);
         if(compare_result > 0){
             ret_node = ret_node->left;
         }else if(compare_result < 0){
@@ -109,7 +111,7 @@ rb_node search_rb_node(rbtree tree, book_t book){
 rb_node search_rb_node_from_node(rb_node node, book_t book){
     rb_node ret_node = node;
     while (ret_node != NULL){
-        int compare_result = compare_ISBN(node->ISBN, book->ISBN);
+        int compare_result = compare_ISBN(ret_node->node_info->ISBN, book->ISBN);
         if(compare_result > 0){
             ret_node = ret_node->left;
         }
@@ -127,7 +129,7 @@ rb_node search_rb_node_from_node(rb_node node, book_t book){
 booklist_t search_booklist_in_rbtree(rbtree tree, book_t book){
     rb_node ret_node = tree->root;
     while(ret_node != NULL){
-        int compare_result = compare_ISBN(ret_node->ISBN, book->ISBN);
+        int compare_result = compare_ISBN(ret_node->node_info->ISBN, book->ISBN);
         if(compare_result > 0){
             ret_node = ret_node->left;
         }else if(compare_result < 0){
@@ -143,7 +145,7 @@ booklist_t search_booklist_in_rbtree(rbtree tree, book_t book){
 booklist_t search_booklist_in_rbtree_from_node(rb_node node, book_t book){
     rb_node ret_node = node;
     while (ret_node != NULL){
-        int compare_result = compare_ISBN(node->ISBN, book->ISBN);
+        int compare_result = compare_ISBN(ret_node->node_info->ISBN, book->ISBN);
         if(compare_result > 0){
             ret_node = ret_node->left;
         }
@@ -210,7 +212,7 @@ void rbtree_insert(rbtree tree, book_t book){
         rb_node iter = tree->root;
         int compare_result;
         while(1){
-            compare_result = compare_ISBN(iter->ISBN, book->ISBN);
+            int compare_result = compare_ISBN(iter->node_info->ISBN, book->ISBN);
             if(compare_result > 0){
                 if(iter->left == NULL){
                     newnode = make_rbnode(book, RED, NULL, NULL);
@@ -296,7 +298,8 @@ void rbtree_remove(rbtree tree, book_t book){
     if(num_child(del_node) == 2){
         rb_node predecessor = min_rb_from_node(del_node);
         drop_booklist(del_node->booklist);
-        strcpy(del_node->ISBN, predecessor->ISBN);
+        free(del_node->node_info);
+        del_node->node_info = copy_book(predecessor->node_info);
         drop_booklist(del_node->booklist);
         copy_booklist(del_node->booklist, predecessor->booklist);
         del_node = predecessor;
@@ -311,6 +314,7 @@ void rbtree_remove(rbtree tree, book_t book){
     if(del_node->parent == NULL && child != NULL)
         child->color = BLACK;
     drop_booklist(del_node->booklist);
+    free(del_node->node_info);
     free(del_node);
     return;
 }
@@ -322,7 +326,8 @@ void rbtree_remove_with_addr(rbtree tree, rb_node key){
     if(num_child(del_node) == 2){
         rb_node predecessor = min_rb_from_node(del_node);
         drop_booklist(del_node->booklist);
-        strcpy(del_node->ISBN, predecessor->ISBN);
+        free(del_node->node_info);
+        del_node->node_info = copy_book(predecessor->node_info);
         drop_booklist(del_node->booklist);
         copy_booklist(del_node->booklist, predecessor->booklist);
         del_node = predecessor;
@@ -337,6 +342,7 @@ void rbtree_remove_with_addr(rbtree tree, rb_node key){
     if(del_node->parent == NULL && child != NULL)
         child->color = BLACK;
     drop_booklist(del_node->booklist);
+    free(del_node->node_info);
     free(del_node);
     return;
 }
@@ -446,13 +452,13 @@ void print_rbnode_booklist(rb_node node){
     }
     int num_copy = booklist_size(node->booklist);
     printf("########### BOOK INFO ##############\n");
-        printf("TITLE: %s\n", node->booklist->head->book->title);
-        printf("ISBN: %s\n", node->booklist->head->book->ISBN);
-        printf("%s:--%s\n", ((node->booklist->head->book->num_authors == 1) ? "AUTHOR" : "AUTHORS"), node->booklist->head->book->authors[0]);
-        for(unsigned int i=1; i < node->booklist->head->book->num_authors; i++){
-            printf("        |-%s\n", node->booklist->head->book->authors[i]);
+        printf("TITLE: %s\n", node->node_info->title);
+        printf("ISBN: %s\n", node->node_info->ISBN);
+        printf("%s:--%s\n", ((node->node_info->num_authors == 1) ? "AUTHOR" : "AUTHORS"), node->booklist->head->book->authors[0]);
+        for(unsigned int i=1; i < node->node_info->num_authors; i++){
+            printf("        |-%s\n", node->node_info->authors[i]);
         }
-        printf("PRICE: %.2lf\n", node->booklist->head->book->price);
+        printf("PRICE: %.2lf\n", node->node_info->price);
         printf("COPIES AVAILABLE: %d\n", num_copy);
         printf("####################################\n\n");
     return;
@@ -518,4 +524,28 @@ book_t get_book_from_tree(rbtree tree, book_t book){
         print_book_info(book);
     }
     return ret_book;
+}
+
+booklist_t get_booklist_by_isbn(rbtree tree, char ISBN[]){
+    booklist_t ret_list = NULL;
+    rb_node iter = tree->root;
+    while(iter){
+        int compare_result = compare_ISBN(iter->node_info->ISBN, ISBN);
+        if(compare_result > 0){
+            iter = iter->left;
+        }
+        else if(compare_result < 0){
+            iter = iter->right;
+        }
+        else{
+            assert(compare_result == 0);
+            ret_list = iter->booklist;
+            break; 
+        }
+    }
+    return ret_list;
+}
+
+book_t get_book_by_isbn(rbtree tree, char ISBN[]){
+    return booklist_pop(get_booklist_by_isbn(tree, ISBN));
 }

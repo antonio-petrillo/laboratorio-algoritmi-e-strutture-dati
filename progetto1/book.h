@@ -10,6 +10,7 @@ typedef struct book_struct{
 }* book_t;
 
 book_t make_book(char ISBN[], char* title, char** authors, unsigned int num_authors, double price);
+book_t copy_book(book_t book);
 book_t delete_book(book_t book);
 void print_book_info(book_t book);
 
