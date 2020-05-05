@@ -23,6 +23,6 @@ void delete_queue_node(queue_node_t node);
 request_queue make_request_queue();
 void enqueue_request(request_queue queue, student_t student, book_t book, request_t request);
 queue_node_t dequeue_request(request_queue queue);
-
+void drop_request_queue(request_queue queue);
 
 #endif

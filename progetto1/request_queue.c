@@ -56,3 +56,16 @@ queue_node_t dequeue_request(request_queue queue){
     }
     return ret_node;
 }
+
+void drop_request_queue(request_queue queue){
+    assert(queue != NULL);
+    queue_node_t tmp;
+    while (queue->head){
+        tmp = queue->head;
+        queue->head = queue->head->next;
+        delete_queue_node(tmp);
+    }
+    free(queue);
+    queue = NULL;
+    return;
+}

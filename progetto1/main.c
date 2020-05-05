@@ -15,13 +15,22 @@ void store_library_backup(rbtree tree, char* filename);
 void store_library_helper(rb_node node, FILE* fp, rb_node lastnode);
 void print_library(rbtree tree);
 void print_library_helper(rb_node node);
-void add_request(request_queue queue, request_t request);
-void add_loan_request(request_queue queue);
-void add_return_request(request_queue queue);
+void add_request(rbtree tree, request_queue queue, request_t request, FILE* stream);
+void add_loan_request(rbtree tree, request_queue queue, FILE* stream);
+void add_return_request(rbtree tree, request_queue queue, FILE* stream);
 void handle_request(rbtree tree, request_queue queue);
+void handle_single_request(rbtree tree, queue_node_t new_request);
+
+void print_menu();
 
 int main(int argc, char** argv){
     printf("################### START PROGRAM ###################\n\n");
+
+    if(argc < 2){
+        printf("progetto1: missing file operand\nTry ./progetto library.txt\n\n");
+        return -1;
+    }
+
     rbtree tree = make_rbtree();
     request_queue queue = make_request_queue();
     load_library(tree, argv[1]);
@@ -31,17 +40,40 @@ int main(int argc, char** argv){
         printf("################## BACKUP CREATED ###################\n\n");
         store_library_backup(tree, argv[1]);
     #endif
-
-    print_library(tree);
     
-
-
-    add_loan_request(queue);
-    add_return_request(queue);
-    handle_request(tree, queue);
-    handle_request(tree, queue);
-
-    store_library(tree, "test.txt");
+    char choice;
+    do{
+        print_menu();
+        printf("choice: ");
+        choice = getchar();
+        getchar();
+        switch (choice){
+            case '1':
+                add_return_request(tree, queue, stdin);
+                puts("");
+                break;
+            case '2':
+                add_loan_request(tree, queue, stdin);
+                puts("");
+                break;
+            case '3':
+                handle_request(tree, queue);
+                puts("");
+                break;
+            case '4':
+                print_library(tree);
+                puts("");
+                break;
+            case '5':
+                break;
+            default:
+                printf("Invalid choice!\n");
+                break;
+        }
+    }while(choice != '5');
+    store_library(tree, "output_library.txt");
+    drop_rbtree(tree);
+    drop_request_queue(queue);
     printf("#################### END PROGRAM ####################\n\n");    
     return 0;
 }
@@ -103,7 +135,7 @@ void store_library_backup(rbtree tree, char* filename){
     while (filename[index] != '.'){
         index--;
     }
-    // _backup.txt\0 := 12 character
+    // + _backup.txt + \0 := 12 character
     char* filename_backup = (char*)calloc(index+12, sizeof(char));
     assert(filename_backup != NULL);
     strncpy(filename_backup, filename, index);
@@ -147,7 +179,8 @@ void print_library_helper(rb_node node){
     return ;
 }
 
-void add_request(request_queue queue, request_t request){
+void add_request(rbtree tree, request_queue queue, request_t request, FILE* stream){
+    char handle_now;
     char name[MAX_SIZE];
     char surname[MAX_SIZE];
     char matricola[11];
@@ -160,28 +193,27 @@ void add_request(request_queue queue, request_t request){
     char price_str[MAX_SIZE];
     double price;
     printf("insert student's name: ");
-    fgets(name, MAX_SIZE, stdin);
+    fgets(name, MAX_SIZE, stream);
     fflush(stdin);
     name[strlen(name)-1] = '\0';
     printf("insert student's surname: ");
-    fgets(surname, MAX_SIZE, stdin);
+    fgets(surname, MAX_SIZE, stream);
     fflush(stdin);
     surname[strlen(surname)-1] = '\0';
     printf("insert student's matricola (9 char): ");
-    fgets(matricola, 11, stdin);
+    fgets(matricola, 11, stream);
     fflush(stdin);
     matricola[strlen(matricola)-1] = '\0';
     printf("insert isbn (max 13 char): ");
-    fgets(ISBN, 15, stdin);
+    fgets(ISBN, 15, stream);
     fflush(stdin);
     ISBN[strlen(ISBN)-1] = '\0';
     printf("insert title: ");
-    fgets(title, MAX_SIZE, stdin);
+    fgets(title, MAX_SIZE, stream);
     fflush(stdin);
     title[strlen(title)-1] = '\0';
     printf("insert authors number: ");
-    //scanf("%u", &num_author);
-    fgets(num_author_str, MAX_SIZE, stdin);
+    fgets(num_author_str, MAX_SIZE, stream);
     num_author_str[strlen(num_author_str)-1] = '\0';
     num_author = atoi(num_author_str);
     fflush(stdin);
@@ -189,7 +221,7 @@ void add_request(request_queue queue, request_t request){
     assert(author != NULL);
     for(int i=0; i<num_author; i++){
         printf("insert name of the %u author: ", (i+1));
-        fgets(author, MAX_SIZE, stdin);
+        fgets(author, MAX_SIZE, stream);
         fflush(stdin);
         author[strlen(author)-1] = '\0';
         authors[i] = (char*)calloc(strlen(author)+1, sizeof(char));
@@ -197,48 +229,82 @@ void add_request(request_queue queue, request_t request){
         strcpy(authors[i], author);
     }
     printf("insert the price of the book: ");
-    //scanf("%lf", &price);
-    fgets(price_str, MAX_SIZE, stdin);
+    fgets(price_str, MAX_SIZE, stream);
     price_str[strlen(price_str)-1] = '\0';
     price = atof(price_str);
     fflush(stdin);
     student_t student = make_student(name, surname, matricola);
     book_t book = make_book(ISBN, title, num_author, authors, price);
-    enqueue_request(queue, student, book, request);
+    printf("\nDo you want to handle the request now? [Y/n]: ");
+    handle_now = fgetc(stream);
+    fgetc(stream);//remove the '\n' from the buffer
+    fflush(stream);
+    if(handle_now == 'Y' || handle_now == 'y'){
+        queue_node_t tmp_node = make_queue_node(student, book, request);
+        handle_single_request(tree, tmp_node);
+    }else{
+        enqueue_request(queue, student, book, request);
+    }
     return;
 }
 
-void add_loan_request(request_queue queue){
-    add_request(queue, GET_BOOK);
+void add_loan_request(rbtree tree, request_queue queue, FILE* stream){
+    add_request(tree, queue, GET_BOOK, stream);
     return;
 }
 
-void add_return_request(request_queue queue){
-    add_request(queue, RETURN_BOOK);
+void add_return_request(rbtree tree, request_queue queue, FILE* stream){
+    add_request(tree, queue, RETURN_BOOK, stream);
     return;
 }
 
 void handle_request(rbtree tree, request_queue queue){
     queue_node_t new_request = dequeue_request(queue);
+    handle_single_request(tree, new_request);
+    return;
+}
+
+void handle_single_request(rbtree tree, queue_node_t new_request){
     if(new_request != NULL){
         if(new_request->request == GET_BOOK){
             book_t book = get_book_from_tree(tree, new_request->book);
             print_student_info_inline(new_request->student);
-            printf(", requested a loan.\n");
+            printf(", requested requires the book:\n");
             if(book != NULL){
                 print_book_info(book);
+                puts("");
                 delete_book(book);
             }else{
                 print_book_info(new_request->book);
+                puts("");
                 printf("book not present in the library\n");
             }
         }else{// RETURN_BOOK
             print_student_info_inline(new_request->student);
-            printf(", returned the book: \n");
-            print_book_info(new_request->book);
-            rbtree_insert(tree, new_request->book, 1);
+            rb_node tmp = search_rb_node(tree, new_request->book);
+            if(tmp){
+                printf(", returned the book: \n");
+                print_book_info(new_request->book);
+                rbtree_insert(tree, new_request->book, 1);
+                puts("");
+            }else{
+                printf(", returned the book:\n");
+                print_book_info(new_request->book);
+                printf("this book does not belong to this library, request rejected\n");
+            }
         }
         delete_queue_node(new_request);
     }
+    return;
+}
+
+void print_menu(){
+    printf("Enter a choice:\n");
+    printf("1) Add a return request\n");
+    printf("2) Add a loan request\n");
+    printf("3) Resume suspended requests\n");
+    printf("4) Print library content\n");
+    printf("5) End program\n");
+    printf("Any other choice will be ignored\n\n");
     return;
 }
