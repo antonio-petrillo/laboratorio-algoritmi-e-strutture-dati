@@ -11,6 +11,7 @@
 
 void load_library(rbtree tree, char* filename);
 void store_library(rbtree tree, char* filename);
+void store_library_output(rbtree tree, char* filename);
 void store_library_backup(rbtree tree, char* filename);
 void store_library_helper(rb_node node, FILE* fp, rb_node lastnode);
 void print_library(rbtree tree);
@@ -19,7 +20,7 @@ void add_request(rbtree tree, request_queue queue, request_t request, FILE* stre
 void add_loan_request(rbtree tree, request_queue queue, FILE* stream);
 void add_return_request(rbtree tree, request_queue queue, FILE* stream);
 void handle_request(rbtree tree, request_queue queue);
-void handle_single_request(rbtree tree, queue_node_t new_request);
+void handle_single_request(rbtree tree, queue_node_t new_request, request_queue queue);
 
 void print_menu();
 
@@ -71,7 +72,7 @@ int main(int argc, char** argv){
                 break;
         }
     }while(choice != '5');
-    store_library(tree, "output_library.txt");
+    store_library_output(tree, argv[1]);
     drop_rbtree(tree);
     drop_request_queue(queue);
     printf("#################### END PROGRAM ####################\n\n");    
@@ -127,6 +128,21 @@ void store_library(rbtree tree, char* filename){
     rb_node lastnode = max_rb(tree);
     store_library_helper(tree->root, fp, lastnode);
     fclose(fp);
+    return;
+}
+
+void store_library_output(rbtree tree, char* filename){
+    unsigned int index = strlen(filename)-1;
+    while (filename[index] != '.'){
+        index--;
+    }
+    // + _output.txt + \0 := 12 character
+    char* filename_backup = (char*)calloc(index+12, sizeof(char));
+    assert(filename_backup != NULL);
+    strncpy(filename_backup, filename, index);
+    strcat(filename_backup, "_output.txt");
+    store_library(tree, filename_backup);
+    free(filename_backup);
     return;
 }
 
@@ -220,7 +236,7 @@ void add_request(rbtree tree, request_queue queue, request_t request, FILE* stre
     authors = (char**) calloc(num_author, sizeof(char*));
     assert(author != NULL);
     for(int i=0; i<num_author; i++){
-        printf("insert name of the %u author: ", (i+1));
+        printf("insert the full name of the %u-ith author: ", (i+1));
         fgets(author, MAX_SIZE, stream);
         fflush(stdin);
         author[strlen(author)-1] = '\0';
@@ -241,7 +257,7 @@ void add_request(rbtree tree, request_queue queue, request_t request, FILE* stre
     fflush(stream);
     if(handle_now == 'Y' || handle_now == 'y'){
         queue_node_t tmp_node = make_queue_node(student, book, request);
-        handle_single_request(tree, tmp_node);
+        handle_single_request(tree, tmp_node, queue);
     }else{
         enqueue_request(queue, student, book, request);
     }
@@ -260,11 +276,11 @@ void add_return_request(rbtree tree, request_queue queue, FILE* stream){
 
 void handle_request(rbtree tree, request_queue queue){
     queue_node_t new_request = dequeue_request(queue);
-    handle_single_request(tree, new_request);
+    handle_single_request(tree, new_request, queue);
     return;
 }
 
-void handle_single_request(rbtree tree, queue_node_t new_request){
+void handle_single_request(rbtree tree, queue_node_t new_request, request_queue queue){
     if(new_request != NULL){
         if(new_request->request == GET_BOOK){
             book_t book = get_book_from_tree(tree, new_request->book);
@@ -277,7 +293,8 @@ void handle_single_request(rbtree tree, queue_node_t new_request){
             }else{
                 print_book_info(new_request->book);
                 puts("");
-                printf("book not present in the library\n");
+                printf("book not present in the library, request suspended\n");
+                enqueue_request(queue, copy_student(new_request->student), copy_book(new_request->book), new_request->request);
             }
         }else{// RETURN_BOOK
             print_student_info_inline(new_request->student);
