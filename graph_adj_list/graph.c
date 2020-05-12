@@ -309,3 +309,24 @@ void dijkstra(graph_t G, unsigned int starting_point, unsigned int end_point){
     drop_graph_queue(q);
     return;
 }
+
+graph_t load_graph_from_file(FILE* fp){
+	unsigned int num_vertices;
+	unsigned int src, dest;
+	int weight;
+	fscanf(fp, "%u", &num_vertices);
+	graph_t g = make_empty_graph(num_vertices);
+	while(!feof(fp)){
+		fscanf(fp, "%u", &src);
+		fscanf(fp, "%u", &dest);
+		fscanf(fp, "%d", &weight);
+		add_edge(g, src, dest, weight);
+	}
+	return g;
+}
+/*
+    first line: --> num_vertices
+    loop: first:  --> src
+          second: --> sdest
+          third:  --> weight
+*/

@@ -72,8 +72,10 @@ void print_path(path_node_ptr_t reach, unsigned int starting_point, unsigned int
 void print_path_helper(path_node_ptr_t reach, unsigned int starting_point, unsigned int end_point);
 void dijkstra(graph_t G, unsigned int starting_point, unsigned int end_point);
 
+graph_t load_graph_from_file(FILE* fp);
+
 /*
-TODO: dijkstra, dfs, strong connected, topological ordering, ? min spanning tree ?
+TODO: dfs, strong connected, topological ordering, ? min spanning tree ?
 */
 
 #endif

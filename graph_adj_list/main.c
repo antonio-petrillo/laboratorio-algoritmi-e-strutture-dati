@@ -11,7 +11,15 @@ unsigned int take_vertex(char* str);
 int take_weight();
 
 int main(int argc, char** argv){
-    graph_t g  = make_empty_graph((argc == 2) ? (atoi(argv[1])) : DEFAULT_SIZE);
+   	graph_t g = NULL;
+	if(argc < 2){
+		g = make_empty_graph(DEFAULT_SIZE);
+	}else{
+		FILE* fp = fopen(argv[1], "r");
+		assert(fp != NULL);
+		g = load_graph_from_file(fp);
+		fclose(fp);
+	}
     graph_t gt = NULL;
     int i=1;
     while(i){
