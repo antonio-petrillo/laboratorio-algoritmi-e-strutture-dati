@@ -100,11 +100,11 @@ graph_stack make_graph_stack(){
 }
 
 
-graph_list_node make_graph_list_node(edge_t edge){
+graph_list_node make_graph_list_node(unsigned int vertex){
     graph_list_node newnode = (graph_list_node) malloc(sizeof(struct list_graph_node_struct));
     assert(newnode != NULL);
     newnode->next = NULL;
-    newnode->edge = edge;
+    newnode->vertex = vertex;
     return newnode;
 }
 
@@ -120,16 +120,16 @@ void drop_graph_stack(graph_stack s){
     return;
 }
 
-void push_graph_stack(graph_stack s, edge_t edge){
-    graph_list_node newnode = make_graph_list_node(edge);
+void push_graph_stack(graph_stack s, unsigned int vertex){
+    graph_list_node newnode = make_graph_list_node(vertex);
     newnode->next = s->head;
     s->head = newnode;
     return;
 }
 
-int pop_graph_stack(graph_stack s, edge_t* edge){
+int pop_graph_stack(graph_stack s, unsigned int* vertex){
     if(s->head != NULL){
-        *edge = s->head->edge;
+        *vertex = s->head->vertex;
         graph_list_node tmp = s->head;
         s->head = s->head->next;
         free(tmp);
@@ -137,6 +137,10 @@ int pop_graph_stack(graph_stack s, edge_t* edge){
     }else{
         return -1;
     }
+}
+
+int is_empty_graph_stack(graph_stack s){
+    return s->head == NULL;
 }
 
 graph_queue make_graph_queue(){
@@ -158,8 +162,8 @@ void drop_graph_queue(graph_queue q){
     return;
 }
 
-void enqueue_graph_queue(graph_queue q, edge_t edge){
-    graph_list_node newnode = make_graph_list_node(edge);
+void enqueue_graph_queue(graph_queue q, unsigned int vertex ){
+    graph_list_node newnode = make_graph_list_node(vertex);
     if(q->head == NULL) q->head = q->tail = newnode;
     else{
         q->tail->next = newnode;
@@ -168,9 +172,9 @@ void enqueue_graph_queue(graph_queue q, edge_t edge){
     return;
 }
 
-int dequeue_graph_queue(graph_queue q, edge_t* edge){
+int dequeue_graph_queue(graph_queue q, unsigned int* vertex){
     if(q->head != NULL){
-        *edge = q->head->edge;
+        *vertex = q->head->vertex;
         graph_list_node tmp = NULL;
         if(q->head == q->tail){
             tmp = q->head;
@@ -184,4 +188,124 @@ int dequeue_graph_queue(graph_queue q, edge_t* edge){
     }else{
         return -1;
     }
+}
+
+int is_empty_graph_queue(graph_queue q){
+    return q->head == NULL;
+}
+
+int is_white_graph(graph_color_t color){
+    return color == WHITE;
+}
+
+int is_grey_graph(graph_color_t color){
+    return color == GREY;
+}
+
+int is_black_graph(graph_color_t color){
+    return color == BLACK;
+}
+
+void bfs(graph_t G, unsigned int starting_point, unsigned int end_point){
+    graph_color_t* color = (graph_color_t*) calloc(G->num_vertices, sizeof(graph_color_t));
+    assert(color != NULL);
+    path_node_ptr_t reach = (path_node_ptr_t) calloc(G->num_vertices, sizeof(path_node_t));
+    assert(reach != NULL);
+    for(unsigned int i=0; i<G->num_vertices; i++){
+        reach[i].is_reach = UNREACHED;
+    }
+    graph_queue q = make_graph_queue();
+    enqueue_graph_queue(q, starting_point);
+    reach[starting_point].is_reach = REACHED;
+    reach[starting_point].vertex = starting_point;
+    reach[starting_point].weight = 0;
+    color[starting_point] = GREY;
+    unsigned int visited_vertex;
+    edge_t iter;
+    while(!is_empty_graph_queue(q)){
+        dequeue_graph_queue(q, &visited_vertex);
+        iter = G->adj_list[visited_vertex];
+        while(iter){
+            if(is_white_graph(color[iter->dest])){
+                enqueue_graph_queue(q, iter->dest);
+                color[iter->dest] = GREY;   //mark the vertex as enqueued
+                reach[iter->dest].vertex = visited_vertex; //predecessor wich discover the vertex
+                reach[iter->dest].weight = reach[visited_vertex].weight + iter->weight;
+                reach[iter->dest].is_reach = REACHED; // mark the vertex as reachable for the path
+            }
+            iter = iter->next;
+        }
+        color[visited_vertex] = BLACK;
+    }
+    print_path(reach, starting_point, end_point);
+    free(color);
+    free(reach);
+    drop_graph_queue(q);
+    return;
+}
+
+void print_path(path_node_ptr_t reach, unsigned int starting_point, unsigned int end_point){
+    if(reach[end_point].is_reach == REACHED){
+        printf("path: ");
+        print_path_helper(reach, starting_point, end_point);
+        printf(" total weight: %d\n", reach[end_point].weight);
+    }else{
+        printf("vertex: %u is unreachable from vertex: %u\n", end_point, starting_point);
+    }
+    return;
+}
+
+void print_path_helper(path_node_ptr_t reach, unsigned int starting_point, unsigned int end_point){
+    if(starting_point == end_point){
+            printf("%u  ", starting_point);
+            return ;
+    }else{
+        print_path_helper(reach, starting_point, reach[end_point].vertex);
+        printf("%u  ", end_point);
+        return;
+    }
+}
+
+void dijkstra(graph_t G, unsigned int starting_point, unsigned int end_point){
+    graph_color_t* color = (graph_color_t*) calloc(G->num_vertices, sizeof(graph_color_t));
+    assert(color != NULL);
+    path_node_ptr_t reach = (path_node_ptr_t) calloc(G->num_vertices, sizeof(path_node_t));
+    assert(reach != NULL);
+    for(unsigned int i=0; i<G->num_vertices; i++){
+        reach[i].is_reach = UNREACHED;
+    }
+    graph_queue q = make_graph_queue();
+    enqueue_graph_queue(q, starting_point);
+    reach[starting_point].is_reach = REACHED;
+    reach[starting_point].vertex = starting_point;
+    reach[starting_point].weight = 0;
+    color[starting_point] = GREY;
+    unsigned int visited_vertex;
+    edge_t iter;
+    while(!is_empty_graph_queue(q)){
+        dequeue_graph_queue(q, &visited_vertex);
+        iter = G->adj_list[visited_vertex];
+        while(iter){
+            if(is_white_graph(color[iter->dest])){
+                enqueue_graph_queue(q, iter->dest);
+                color[iter->dest] = GREY;   //mark the vertex as enqueued
+                reach[iter->dest].vertex = visited_vertex; //predecessor wich discover the vertex
+                reach[iter->dest].weight = reach[visited_vertex].weight + iter->weight;
+                reach[iter->dest].is_reach = REACHED; // mark the vertex as reachable for the path
+            }
+            else{
+                if(reach[iter->dest].weight > (reach[visited_vertex].weight + iter->weight)){
+                    reach[iter->dest].vertex = visited_vertex;
+                    reach[iter->dest].weight = reach[visited_vertex].weight + iter->weight;
+                }
+            }
+            iter = iter->next;
+        }
+        color[visited_vertex] = BLACK;
+    }
+    print_path(reach, starting_point, end_point);
+    free(color);
+    free(reach);
+    drop_graph_queue(q);
+    return;
 }
