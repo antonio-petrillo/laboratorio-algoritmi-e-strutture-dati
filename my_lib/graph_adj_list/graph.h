@@ -88,7 +88,6 @@ void scc(graph_t G);
 
 /*
 TODO: ? min spanning tree ?
-TO 'CORRECT' ssc
 */
 
 #endif

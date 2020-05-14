@@ -406,10 +406,9 @@ graph_stack_t ts(graph_t G){
     }
     if(has_cycle){
         printf("this graph has a cycle, so it haven't a topological order\n");
-    }else{
-        printf("ot : ");
-        print_graph_list_node(s->head);
     }
+    printf("ot : ");
+    print_graph_list_node(s->head);
     free(reach);
     return s;
 }

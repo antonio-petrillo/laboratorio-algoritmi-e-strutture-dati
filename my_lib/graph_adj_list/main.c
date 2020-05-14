@@ -3,7 +3,7 @@
 #include <assert.h>
 #include "graph.h"
 
-#define DEFAULT_SIZE 20
+#define DEFAULT_SIZE 8
 
 void menu();
 int choice();
