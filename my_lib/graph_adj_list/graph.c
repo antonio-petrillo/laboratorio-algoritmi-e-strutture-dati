@@ -366,6 +366,7 @@ void dfs(graph_t G){
     }
     for(unsigned int starting_point = 0; starting_point < G->num_vertices; starting_point++){
         if(path[starting_point].is_reach == UNREACHED){
+            path[starting_point].is_reach = REACHED;
             printf("path starting from: ");
             dfs_helper(G, path, starting_point);
             printf("\n");
@@ -378,7 +379,7 @@ void dfs(graph_t G){
 }
 
 void dfs_helper(graph_t G, path_node_ptr_t path, unsigned int starting_point){
-    printf("%u ", starting_point);
+    printf("%u ", starting_point); 
     for(edge_t iter = G->adj_list[starting_point]; iter != NULL; iter = iter->next){
         if(path[iter->dest].is_reach == UNREACHED){
             path[iter->dest].is_reach = REACHED;
@@ -390,7 +391,7 @@ void dfs_helper(graph_t G, path_node_ptr_t path, unsigned int starting_point){
     return;
 }
 
-void ts(graph_t G){
+graph_stack_t ts(graph_t G){
     path_node_ptr_t reach = (path_node_ptr_t) calloc(G->num_vertices, sizeof(path_node_t));
     assert(reach != NULL);
     graph_stack_t s = make_graph_stack();
@@ -409,9 +410,8 @@ void ts(graph_t G){
         printf("ot : ");
         print_graph_list_node(s->head);
     }
-    drop_graph_stack(s);
     free(reach);
-    return;
+    return s;
 }
 
 int ts_dfs(graph_t G, path_node_ptr_t reach, unsigned int starting_point, graph_stack_t s){
@@ -431,5 +431,31 @@ int ts_dfs(graph_t G, path_node_ptr_t reach, unsigned int starting_point, graph_
 
 void set_true(int* curr, int new_candidate){
     if(new_candidate) *curr = new_candidate;
+    return;
+}
+
+void scc(graph_t G){
+    graph_stack_t s = ts(G);
+    path_node_ptr_t reach = (path_node_ptr_t) calloc(G->num_vertices, sizeof(path_node_t));
+    assert(reach != NULL);
+    int starting_point;
+    unsigned int scc_index = 0;
+    for(unsigned int i=0; i<G->num_vertices; i++){
+        reach[i].is_reach = UNREACHED;
+    }
+    graph_t gt = transpose(G);
+    while(!is_empty_graph_stack(s)){
+        pop_graph_stack(s, &starting_point);
+        if(reach[starting_point].is_reach == UNREACHED){
+            reach[starting_point].is_reach = REACHED;
+            printf("scc %u: ", scc_index);
+            dfs_helper(gt, reach, starting_point);
+            scc_index++;
+            printf("\n");
+        }
+    }
+    drop_graph(gt);
+    free(reach);
+    drop_graph_stack(s);
     return;
 }

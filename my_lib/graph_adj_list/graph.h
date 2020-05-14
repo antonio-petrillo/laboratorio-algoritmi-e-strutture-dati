@@ -80,12 +80,15 @@ graph_t load_graph_from_file(FILE* fp);
 void dfs(graph_t G);
 void dfs_helper(graph_t G, path_node_ptr_t path, unsigned int starting_point);
 
-void ts(graph_t G);
+graph_stack_t ts(graph_t G);
 int ts_dfs(graph_t G, path_node_ptr_t reach, unsigned int starting_point, graph_stack_t s);
 void set_true(int* curr, int new_candidate);
 
+void scc(graph_t G);
+
 /*
-TODO: strong connected, topological ordering, ? min spanning tree ?
+TODO: ? min spanning tree ?
+TO 'CORRECT' ssc
 */
 
 #endif
