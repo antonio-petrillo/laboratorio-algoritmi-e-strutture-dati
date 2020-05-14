@@ -92,24 +92,35 @@ graph_t transpose(graph_t G){
     return transpose;
 }
 
-graph_stack make_graph_stack(){
-    graph_stack s = (graph_stack) malloc(sizeof(struct stack_graph_struct));
+graph_stack_t make_graph_stack(){
+    graph_stack_t s = (graph_stack_t) malloc(sizeof(struct stack_graph_struct));
     assert(s != NULL);
     s->head = NULL;
     return s;
 }
 
 
-graph_list_node make_graph_list_node(unsigned int vertex){
-    graph_list_node newnode = (graph_list_node) malloc(sizeof(struct list_graph_node_struct));
+graph_list_node_t make_graph_list_node(unsigned int vertex){
+    graph_list_node_t newnode = (graph_list_node_t) malloc(sizeof(struct list_graph_node_struct));
     assert(newnode != NULL);
     newnode->next = NULL;
     newnode->vertex = vertex;
     return newnode;
 }
 
-void drop_graph_stack(graph_stack s){
-    graph_list_node tmp = NULL, iter = s->head;
+void print_graph_list_node(graph_list_node_t n){
+    if(n){
+        printf(" %u", n->vertex);
+        print_graph_list_node(n->next);
+    }
+    else{
+        printf("\n");
+    }
+    return;
+}
+
+void drop_graph_stack(graph_stack_t s){
+    graph_list_node_t tmp = NULL, iter = s->head;
     while(iter){
         tmp = iter; 
         iter = iter->next;
@@ -120,17 +131,17 @@ void drop_graph_stack(graph_stack s){
     return;
 }
 
-void push_graph_stack(graph_stack s, unsigned int vertex){
-    graph_list_node newnode = make_graph_list_node(vertex);
+void push_graph_stack(graph_stack_t s, unsigned int vertex){
+    graph_list_node_t newnode = make_graph_list_node(vertex);
     newnode->next = s->head;
     s->head = newnode;
     return;
 }
 
-int pop_graph_stack(graph_stack s, unsigned int* vertex){
+int pop_graph_stack(graph_stack_t s, unsigned int* vertex){
     if(s->head != NULL){
         *vertex = s->head->vertex;
-        graph_list_node tmp = s->head;
+        graph_list_node_t tmp = s->head;
         s->head = s->head->next;
         free(tmp);
         return 0;
@@ -139,19 +150,26 @@ int pop_graph_stack(graph_stack s, unsigned int* vertex){
     }
 }
 
-int is_empty_graph_stack(graph_stack s){
+void print_graph_stack(graph_stack_t s){
+    if(s != NULL){
+        print_graph_list_node(s->head);
+    }
+    return;
+}
+
+int is_empty_graph_stack(graph_stack_t s){
     return s->head == NULL;
 }
 
-graph_queue make_graph_queue(){
-    graph_queue q = (graph_queue) malloc(sizeof(struct queue_graph_struct));
+graph_queue_t make_graph_queue(){
+    graph_queue_t q = (graph_queue_t) malloc(sizeof(struct queue_graph_struct));
     assert(q != NULL);
     q->head = q->tail = NULL;
     return q;
 }
 
-void drop_graph_queue(graph_queue q){
-    graph_list_node tmp = NULL, iter = q->head;
+void drop_graph_queue(graph_queue_t q){
+    graph_list_node_t tmp = NULL, iter = q->head;
     while(iter){
         tmp = iter;
         iter = iter->next;
@@ -162,8 +180,8 @@ void drop_graph_queue(graph_queue q){
     return;
 }
 
-void enqueue_graph_queue(graph_queue q, unsigned int vertex ){
-    graph_list_node newnode = make_graph_list_node(vertex);
+void enqueue_graph_queue(graph_queue_t q, unsigned int vertex ){
+    graph_list_node_t newnode = make_graph_list_node(vertex);
     if(q->head == NULL) q->head = q->tail = newnode;
     else{
         q->tail->next = newnode;
@@ -172,10 +190,10 @@ void enqueue_graph_queue(graph_queue q, unsigned int vertex ){
     return;
 }
 
-int dequeue_graph_queue(graph_queue q, unsigned int* vertex){
+int dequeue_graph_queue(graph_queue_t q, unsigned int* vertex){
     if(q->head != NULL){
         *vertex = q->head->vertex;
-        graph_list_node tmp = NULL;
+        graph_list_node_t tmp = NULL;
         if(q->head == q->tail){
             tmp = q->head;
             q->head = q->tail = NULL;
@@ -190,7 +208,14 @@ int dequeue_graph_queue(graph_queue q, unsigned int* vertex){
     }
 }
 
-int is_empty_graph_queue(graph_queue q){
+void print_graph_queue(graph_queue_t q){
+    if(q != NULL){
+        print_graph_list_node(q->head);
+    }
+    return;
+}
+
+int is_empty_graph_queue(graph_queue_t q){
     return q->head == NULL;
 }
 
@@ -214,7 +239,7 @@ void bfs(graph_t G, unsigned int starting_point, unsigned int end_point){
     for(unsigned int i=0; i<G->num_vertices; i++){
         reach[i].is_reach = UNREACHED;
     }
-    graph_queue q = make_graph_queue();
+    graph_queue_t q = make_graph_queue();
     enqueue_graph_queue(q, starting_point);
     reach[starting_point].is_reach = REACHED;
     reach[starting_point].vertex = starting_point;
@@ -274,7 +299,7 @@ void dijkstra(graph_t G, unsigned int starting_point, unsigned int end_point){
     for(unsigned int i=0; i<G->num_vertices; i++){
         reach[i].is_reach = UNREACHED;
     }
-    graph_queue q = make_graph_queue();
+    graph_queue_t q = make_graph_queue();
     enqueue_graph_queue(q, starting_point);
     reach[starting_point].is_reach = REACHED;
     reach[starting_point].vertex = starting_point;
@@ -323,10 +348,88 @@ graph_t load_graph_from_file(FILE* fp){
 		add_edge(g, src, dest, weight);
 	}
 	return g;
-}
-/*
+
+    /*
     first line: --> num_vertices
     loop: first:  --> src
           second: --> sdest
           third:  --> weight
-*/
+    */
+
+}
+
+void dfs(graph_t G){
+    path_node_ptr_t path = (path_node_ptr_t) calloc(G->num_vertices, sizeof(path_node_t));
+    assert(path != NULL);
+    for(unsigned int i=0; i<G->num_vertices; i++){
+        path[i].is_reach = UNREACHED;
+    }
+    for(unsigned int starting_point = 0; starting_point < G->num_vertices; starting_point++){
+        if(path[starting_point].is_reach == UNREACHED){
+            printf("path starting from: ");
+            dfs_helper(G, path, starting_point);
+            printf("\n");
+        }   
+    }
+    // the array path contains information about the dfs visit
+    //the dfs helper prints the visited nodes for simplicity
+    free(path);
+    return;
+}
+
+void dfs_helper(graph_t G, path_node_ptr_t path, unsigned int starting_point){
+    printf("%u ", starting_point);
+    for(edge_t iter = G->adj_list[starting_point]; iter != NULL; iter = iter->next){
+        if(path[iter->dest].is_reach == UNREACHED){
+            path[iter->dest].is_reach = REACHED;
+            path[iter->dest].vertex = starting_point;
+            path[iter->dest].weight = path[starting_point].weight + iter->weight; 
+            dfs_helper(G, path, iter->dest);
+        }
+    }
+    return;
+}
+
+void ts(graph_t G){
+    path_node_ptr_t reach = (path_node_ptr_t) calloc(G->num_vertices, sizeof(path_node_t));
+    assert(reach != NULL);
+    graph_stack_t s = make_graph_stack();
+    for(unsigned int i=0; i<G->num_vertices; i++){
+        reach[i].is_reach = UNREACHED;
+    }
+    int has_cycle = 0;
+    for(unsigned int starting_point = 0; starting_point < G->num_vertices; starting_point++){
+        if(reach[starting_point].is_reach == UNREACHED){
+            set_true(&has_cycle, ts_dfs(G, reach, starting_point, s));
+        }
+    }
+    if(has_cycle){
+        printf("this graph has a cycle, so it haven't a topological order\n");
+    }else{
+        printf("ot : ");
+        print_graph_list_node(s->head);
+    }
+    drop_graph_stack(s);
+    free(reach);
+    return;
+}
+
+int ts_dfs(graph_t G, path_node_ptr_t reach, unsigned int starting_point, graph_stack_t s){
+    int has_cycle = 0;
+    reach[starting_point].is_reach = REACHED_BUT_NOT_LEFT;
+    for(edge_t iter = G->adj_list[starting_point]; iter != NULL; iter = iter->next){
+        if(reach[iter->dest].is_reach == UNREACHED){
+            has_cycle = ts_dfs(G, reach, iter->dest, s);
+        }else if(reach[iter->dest].is_reach == REACHED_BUT_NOT_LEFT){
+            has_cycle = 1;
+        }
+    }
+    reach[starting_point].is_reach = REACHED;
+    push_graph_stack(s, starting_point);
+    return has_cycle;
+}
+
+void set_true(int* curr, int new_candidate){
+    if(new_candidate) *curr = new_candidate;
+    return;
+}

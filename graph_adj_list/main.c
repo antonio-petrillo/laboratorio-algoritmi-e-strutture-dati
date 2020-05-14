@@ -47,6 +47,12 @@ int main(int argc, char** argv){
             dijkstra(g, take_vertex("starting point"), take_vertex("end_point"));
             break;
         case 7:
+            dfs(g);
+            break;
+        case 8:
+            ts(g);
+            break;
+        case 9:
             drop_graph(g);
             i = 0;
             break;
@@ -58,7 +64,7 @@ int main(int argc, char** argv){
 }
 
 void menu(){
-    printf("1) add edge\n2) remove edge\n3) print graph\n4) make transpose & print it\n5) bfs\n6) dijkstra\n7) drop & end\nAny other input will be ignored\n");
+    printf("1) add edge\n2) remove edge\n3) print graph\n4) make transpose & print it\n5) bfs\n6) dijkstra\n7) dfs\n8) topological sort\n9) drop & end\nAny other input will be ignored\n");
     return;
 }
 

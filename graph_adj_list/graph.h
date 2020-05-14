@@ -2,7 +2,7 @@
 #define GRAPH_H 1
 
 typedef enum{WHITE, GREY, BLACK} graph_color_t;
-typedef enum{UNREACHED, REACHED} reach_t;
+typedef enum{UNREACHED, REACHED, REACHED_BUT_NOT_LEFT} reach_t;
 
 typedef struct edge_struct{
     struct edge_struct* next;
@@ -20,16 +20,16 @@ typedef struct graph_struct{
 typedef struct list_graph_node_struct{
     struct list_graph_node_struct* next;
     unsigned int vertex;
-}* graph_list_node;
+}* graph_list_node_t;
 
 typedef struct stack_graph_struct{
-    graph_list_node head;
-}* graph_stack;
+    graph_list_node_t head;
+}* graph_stack_t;
 
 typedef struct queue_graph_struct{
-    graph_list_node head;
-    graph_list_node tail;
-}* graph_queue;
+    graph_list_node_t head;
+    graph_list_node_t tail;
+}* graph_queue_t;
 
 typedef struct path_node_struct{
     unsigned int vertex;
@@ -49,19 +49,22 @@ int is_empty_graph(graph_t G);
 void drop_graph(graph_t G);
 graph_t transpose(graph_t G);
 
-graph_list_node make_graph_list_node(unsigned int vertex);
+graph_list_node_t make_graph_list_node(unsigned int vertex);
+void print_graph_list_node(graph_list_node_t n);
 
-graph_stack make_graph_stack();
-void drop_graph_stack(graph_stack s);
-void push_graph_stack(graph_stack s, unsigned int vertex);
-int pop_graph_stack(graph_stack s, unsigned int* vertex);
-int is_empty_graph_stack(graph_stack s);
+graph_stack_t make_graph_stack();
+void drop_graph_stack(graph_stack_t s);
+void push_graph_stack(graph_stack_t s, unsigned int vertex);
+int pop_graph_stack(graph_stack_t s, unsigned int* vertex);
+void print_graph_stack(graph_stack_t s);
+int is_empty_graph_stack(graph_stack_t s);
 
-graph_queue make_graph_queue();
-void drop_graph_queue(graph_queue q);
-void enqueue_graph_queue(graph_queue q, unsigned int vertex);
-int dequeue_graph_queue(graph_queue q, unsigned int* vertex);
-int is_empty_graph_queue(graph_queue q);
+graph_queue_t make_graph_queue();
+void drop_graph_queue(graph_queue_t q);
+void enqueue_graph_queue(graph_queue_t q, unsigned int vertex);
+int dequeue_graph_queue(graph_queue_t q, unsigned int* vertex);
+void print_graph_queue(graph_queue_t q);
+int is_empty_graph_queue(graph_queue_t q);
 
 int is_white_graph(graph_color_t color);
 int is_grey_graph(graph_color_t color);
@@ -74,8 +77,15 @@ void dijkstra(graph_t G, unsigned int starting_point, unsigned int end_point);
 
 graph_t load_graph_from_file(FILE* fp);
 
+void dfs(graph_t G);
+void dfs_helper(graph_t G, path_node_ptr_t path, unsigned int starting_point);
+
+void ts(graph_t G);
+int ts_dfs(graph_t G, path_node_ptr_t reach, unsigned int starting_point, graph_stack_t s);
+void set_true(int* curr, int new_candidate);
+
 /*
-TODO: dfs, strong connected, topological ordering, ? min spanning tree ?
+TODO: strong connected, topological ordering, ? min spanning tree ?
 */
 
 #endif
