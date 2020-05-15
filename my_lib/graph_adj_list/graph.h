@@ -49,6 +49,9 @@ int is_empty_graph(graph_t G);
 void drop_graph(graph_t G);
 graph_t transpose(graph_t G);
 
+void remove_vertex(graph_t G, unsigned int v);//logical remove
+void add_vertex(graph_t G);
+
 graph_list_node_t make_graph_list_node(unsigned int vertex);
 void print_graph_list_node(graph_list_node_t n);
 

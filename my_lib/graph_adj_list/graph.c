@@ -92,6 +92,44 @@ graph_t transpose(graph_t G){
     return transpose;
 }
 
+void remove_vertex(graph_t G, unsigned int v){ // logical remove
+    if(G != NULL){
+        if(v < G->num_vertices){
+            edge_t tmp = NULL;
+            for(edge_t iter = G->adj_list[v]; iter != NULL; ){
+                tmp = iter;
+                iter = iter->next;
+                free(tmp);
+            }
+            G->adj_list[v] = NULL;
+            for(unsigned int i = 0; i < G->num_vertices; i++){
+                edge_t iter = G->adj_list[i];
+                if(i == v) continue;
+                while(iter){
+                    if(iter->dest == v){
+                        remove_edge(G, i,  v);
+                    }
+                    iter = iter->next;
+                }
+            }
+        }
+    } 
+    return;
+}
+
+void add_vertex(graph_t G){
+    G->num_vertices++;
+    edge_t* new_adj_list = (edge_t*) calloc(G->num_vertices, sizeof(edge_t));
+    assert(new_adj_list != NULL);
+    for(unsigned int i=0; i < G->num_vertices-1; i++){
+        new_adj_list[i] = G->adj_list[i];
+        G->adj_list[i] = NULL;
+    }
+    free(G->adj_list);
+    G->adj_list = new_adj_list;
+    return;
+}
+
 graph_stack_t make_graph_stack(){
     graph_stack_t s = (graph_stack_t) malloc(sizeof(struct stack_graph_struct));
     assert(s != NULL);

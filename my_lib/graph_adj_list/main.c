@@ -56,6 +56,12 @@ int main(int argc, char** argv){
             scc(g);
             break;
         case 10:
+            add_vertex(g);
+            break;
+        case 11:
+            remove_vertex(g, take_vertex("vertex to remove (logical remove)"));
+            break;
+        case 12:
             drop_graph(g);
             i = 0;
             break;
@@ -70,7 +76,7 @@ void menu(){
     printf("1) add edge\n2) remove edge\n3) print graph\n");
     printf("4) make transpose & print it\n5) bfs\n");
     printf("6) dijkstra\n7) dfs\n8) topological sort\n9) strongly connected components\n");
-    printf("10) drop & end\nAny other input will be ignored\n");
+    printf("10) add vertex\n11) remove vertex \n12) drop & end\nAny other input will be ignored\n");
     return;
 }
 
