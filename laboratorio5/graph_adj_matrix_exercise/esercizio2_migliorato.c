@@ -21,6 +21,7 @@ int main(int argc, char** argv){
 }
 
 void well_knot(graph_t g){
+    srand(time(NULL));
     size_t candidate;
     int found = 0;
     for(size_t i=0; i < g->num_vertices; ){
@@ -36,12 +37,16 @@ void well_knot(graph_t g){
     }
     printf("candidate %lu\n", candidate);
     for(size_t i=0; i<g->num_vertices; i++){
-        if(g->adj_matrix[i][candidate] == 0 && i != candidate){
+        if(g->adj_matrix[candidate][i] != 0 && i != candidate){
             printf("this graph doesn't have a well knot node\n");
             return;
         }
     }
     printf("%lu is a well knot node\n", candidate);
-    add_edge(rand()%rand(), rand()%g->num_vertices, 3);
+    size_t dest;
+    do{
+        dest = rand()%g->num_vertices;
+    }while(dest == candidate);
+    add_edge(g, rand()%rand(), dest, candidate);
     return;
 }
