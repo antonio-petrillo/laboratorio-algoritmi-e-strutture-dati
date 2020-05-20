@@ -42,5 +42,6 @@ void well_knot(graph_t g){
         }
     }
     printf("%lu is a well knot node\n", candidate);
+    add_edge(rand()%rand(), rand()%g->num_vertices, 3);
     return;
 }
