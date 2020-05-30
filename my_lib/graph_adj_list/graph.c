@@ -156,7 +156,7 @@ void remove_vertex(graph_t G, unsigned int v){// physical remove
     unsigned int index = 0;
     for(unsigned int i=0; i<=G->num_vertices; i++){
         if(i == v){
-            edge_t iter = G->adj_list[v], tmp = NULL;
+            edge_t iter = old[v], tmp = NULL;
             while(iter){
                 tmp = iter; 
                 iter = iter->next;
